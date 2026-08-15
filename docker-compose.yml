@@ -1,9 +1,12 @@
 services:
   watcher:
     build: .
-    container_name: lacerda-events
     restart: unless-stopped
-    env_file: .env
+    # .env is gitignored, so it is absent on the server - Coolify injects the
+    # vars from its UI instead. required:false keeps local runs working.
+    env_file:
+      - path: .env
+        required: false
     volumes:
       # Named volume, not ./data - a redeploy re-clones the repo and would
       # take a bind mount with it, losing the baseline and replaying events.
