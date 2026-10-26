@@ -1,24 +1,48 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "timezone": "UTC",
-  "schedule": ["before 6am on monday"],
+  "schedule": [
+    "before 6am on monday"
+  ],
   "semanticCommits": "disabled",
   "commitMessagePrefix": "deps(chore):",
   "commitMessageAction": "update",
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "prConcurrentLimit": 5,
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
-    "schedule": ["at any time"],
-    "labels": ["dependencies", "security"]
+    "schedule": [
+      "at any time"
+    ],
+    "labels": [
+      "dependencies",
+      "security"
+    ]
   },
   "packageRules": [
     {
       "description": "One PR for all minor and patch updates; majors stay separate.",
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "groupName": "non-major dependencies",
       "groupSlug": "non-major"
+    },
+    {
+      "description": "Merge minor and patch updates once CI passes; GitHub merges them, the master ruleset requires CI.",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     }
   ]
 }
