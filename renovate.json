@@ -1,6 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
+  "extends": ["config:recommended"],
+  "timezone": "UTC",
+  "schedule": ["before 6am on monday"],
+  "semanticCommits": "disabled",
+  "commitMessagePrefix": "deps(chore):",
+  "commitMessageAction": "update",
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "schedule": ["at any time"],
+    "labels": ["dependencies", "security"]
+  },
+  "packageRules": [
+    {
+      "description": "One PR for all minor and patch updates; majors stay separate.",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "non-major"
+    }
   ]
 }
