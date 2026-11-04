@@ -323,6 +323,9 @@ def render_gone(ev: dict) -> str:
 # main loop
 # --------------------------------------------------------------------------
 
+# Failed cycles in a row before Telegram hears about it.
+FAIL_ALERT_AFTER = 5
+
 _stop = False
 
 
@@ -474,8 +477,11 @@ def main() -> int:
     while not _stop:
         try:
             run_cycle(cfg, dc, tg)
-            if consecutive_failures:
-                tg.send("✅ <b>Watcher recovered</b> - polling again.")
+            # Single failed cycles (timeouts, 5xx) are normal and stay in the
+            # log. Telegram hears "recovered" only if it first heard "failing".
+            if consecutive_failures >= FAIL_ALERT_AFTER:
+                tg.send("✅ <b>Watcher recovered</b> - polling again "
+                        f"after {consecutive_failures} failed cycles.")
             consecutive_failures = 0
             clear_fatal(cfg)
         except FatalError as e:
@@ -485,8 +491,8 @@ def main() -> int:
         except Exception as e:  # noqa: BLE001 - keep the loop alive
             consecutive_failures += 1
             log.exception("Cycle failed (%d in a row): %s", consecutive_failures, e)
-            if consecutive_failures == 5:
-                tg.send(f"⚠️ Watcher has failed 5 cycles in a row.\n{esc(e)}")
+            if consecutive_failures == FAIL_ALERT_AFTER:
+                tg.send(f"⚠️ Watcher has failed {FAIL_ALERT_AFTER} cycles in a row.\n{esc(e)}")
 
         # Jitter so requests don't land on a perfectly regular cadence.
         delay = cfg.interval * (1 + random.uniform(-cfg.jitter, cfg.jitter))

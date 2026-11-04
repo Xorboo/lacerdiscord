@@ -144,6 +144,48 @@ with tempfile.TemporaryDirectory() as td:
     poller.alert_fatal(cfg, tg, poller.FatalError("403 - not a member"))
     check("alerts again after recovery", len(sent) == 3)
 
+print("\n[11] a short run of failed cycles does not reach Telegram")
+
+
+def run_loop(outcomes):
+    """Drive main() through one cycle per outcome; True = ok, False = raises."""
+    sent, left = [], list(outcomes)
+
+    def fake_cycle(*_):
+        ok = left.pop(0)
+        poller._stop = not left  # last outcome ends the loop
+        if not ok:
+            raise OSError("timeout")
+
+    saved = (poller.run_cycle, poller.Telegram.send, poller.time.sleep, sys.argv, poller.clear_fatal)
+    poller.run_cycle = fake_cycle
+    poller.Telegram.send = lambda self, text: sent.append(text)
+    poller.time.sleep = lambda _s: None
+    poller.clear_fatal = lambda _cfg: None
+    sys.argv = ["poller.py"]
+    poller._stop = False
+    try:
+        poller.main()
+    finally:
+        (poller.run_cycle, poller.Telegram.send, poller.time.sleep, sys.argv, poller.clear_fatal) = saved
+        poller._stop = False
+    return sent
+
+
+sent = run_loop([True, False, True, False, False, True])
+check("1-2 failures then success: no message", sent == [])
+
+n = poller.FAIL_ALERT_AFTER
+sent = run_loop([False] * (n - 1) + [True])
+check(f"{n - 1} failures then success: no message", sent == [])
+
+sent = run_loop([False] * n + [True])
+check(f"{n} failures: one 'failed' alert", len(sent) == 2 and "failed" in sent[0])
+check("then one 'recovered' note", "recovered" in sent[1] and f"after {n}" in sent[1])
+
+sent = run_loop([False] * (n + 3) + [True])
+check("long outage: still one alert, one recovery", len(sent) == 2)
+
 print("\n" + "=" * 52)
 if FAILS:
     print(f"{len(FAILS)} FAILURE(S):")
