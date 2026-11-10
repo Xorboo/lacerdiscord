@@ -43,6 +43,22 @@
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true
+    },
+    {
+      "description": "A Python minor (3.12 -> 3.13) is a breaking change: wheels for new versions come late. Own PR, merged by hand.",
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "python"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "groupName": "python",
+      "groupSlug": "python",
+      "automerge": false
     }
   ]
 }
